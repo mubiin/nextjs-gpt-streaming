@@ -36,7 +36,12 @@ export default function Home() {
     <main className={styles.main}>
       <form className={styles.form} onSubmit={onSubmit}>
         <label htmlFor="prompt">Ask KafkaBot 😸🤖</label>
-        <textarea name="prompt" value={prompt} onChange={onTextChange} />
+        <textarea
+          name="prompt"
+          value={prompt}
+          onChange={onTextChange}
+          autoFocus
+        />
         <button type="submit">Submit</button>
       </form>
 
