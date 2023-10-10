@@ -6,10 +6,12 @@ import { useChat } from 'ai/react';
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
+  const [fetching, setFetching] = useState(false);
 
   const { messages, handleSubmit, handleInputChange } = useChat({
     // We could skip this since this is used as the default value
     api: '/api/chat',
+    onFinish: () => setFetching(false),
   });
 
   const lastMessage = messages[messages.length - 1];
@@ -23,6 +25,7 @@ export default function Home() {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFetching(true);
     handleSubmit(e, {
       options: {
         body: {
@@ -42,7 +45,9 @@ export default function Home() {
           onChange={onTextChange}
           autoFocus
         />
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={fetching || !prompt}>
+          Submit
+        </button>
       </form>
 
       {response && (

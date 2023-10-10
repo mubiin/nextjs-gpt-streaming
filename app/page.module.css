@@ -35,7 +35,12 @@
   letter-spacing: 3px;
 }
 
-.response, .form {
+.form > button:disabled {
+  cursor: not-allowed;
+}
+
+.response,
+.form {
   width: 35rem;
   max-width: 90vw;
 }
