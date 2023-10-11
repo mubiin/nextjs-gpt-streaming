@@ -2,37 +2,60 @@
 
 import { useState } from 'react';
 import styles from './page.module.css';
-import { useChat } from 'ai/react';
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
+  const [response, setResponse] = useState('');
   const [fetching, setFetching] = useState(false);
-
-  const { messages, handleSubmit, handleInputChange } = useChat({
-    // We could skip this since this is used as the default value
-    api: '/api/chat',
-    onFinish: () => setFetching(false),
-  });
-
-  const lastMessage = messages[messages.length - 1];
-  const response =
-    lastMessage?.role === 'assistant' ? lastMessage?.content : null;
 
   const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
-    handleInputChange(e);
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFetching(true);
-    handleSubmit(e, {
-      options: {
-        body: {
-          prompt,
-        },
+    try {
+      await streamResponse();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const streamResponse = async () => {
+    setResponse('');
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        prompt,
+      }),
     });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    // This data is a ReadableStream
+    const data = response.body;
+    if (!data) {
+      return;
+    }
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      setResponse((prev) => prev + chunkValue);
+    }
   };
 
   return (
